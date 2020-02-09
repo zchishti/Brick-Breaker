@@ -36,6 +36,14 @@ class Ball{
         } */
     }
 
+    reverseY(){
+        this.velocity.y *= -1;
+    }
+
+    belowBottom(){
+        return this.position.y + this.radius > gameHeight;
+    }
+
     display(){
         fill(this.color);
         ellipse(this.position.x, this.position.y, this.size, this.size);

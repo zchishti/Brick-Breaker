@@ -9,72 +9,103 @@ let bricks = [];
 let gameWidth;
 let gameHeight;
 
+let gameState;
+
 function setup(){
     gameWidth =  windowWidth - 30;
     gameHeight = windowHeight -50;
+    gameState = 'playing';
+    playerScore= 0;
     //bg = loadImage("img/bg.jpg");
     bg =  0;
     createCanvas(gameWidth,gameHeight);
 
     // Color generation for bricks 
-    let colors = [];
-    colors.push(color(26,188,156));
-    colors.push(color(52,152,219));
-    colors.push(color(155,89,182));
-    colors.push(color(231,76,60));
-    colors.push(color(243,156,18));
-    colors.push(color(56,142,60));
-    colors.push(color(0,191,165));
-    colors.push(color(173,20,87));
-    colors.push(color(62,39,35));
-    colors.push(color(255,87,34));
-    colors.push(color(156,39,176));
-    colors.push(color(118,255,3));
+    let colors = generateRandomColors(5);
 
     paddle = new Paddle();
     ball = new Ball(paddle);
-    const bricksPerRow = 10;
-    const rows =  3;
-    const brickWdth = gameWidth / bricksPerRow;
-    for(let j =  0; j < rows; j++){
-      for (let i = 0; i < bricksPerRow; i++){
-        brick = new Brick(createVector(brickWdth * i, j * 25),brickWdth,25, colors[Math.floor(random(0,colors.length))]);
-        bricks.push(brick);
-      }
-    }
+    bricks = createBricks(colors);
     
 }
 
-function draw(){
-    background(bg);
+function createBricks(colors){
+  const bricks = [];
+  const bricksPerRow = 10;
+  const rows =  3;
+  const brickWdth = gameWidth / bricksPerRow;
+  for(let j =  0; j < rows; j++){
+    for (let i = 0; i < bricksPerRow; i++){
+      brick = new Brick(createVector(brickWdth * i, j * 25),brickWdth,25, colors[Math.floor(random(0,colors.length))]);
+      bricks.push(brick);
+    }
+  }
+  return bricks;
+}
 
-    //paddle
-    if (keyIsDown(LEFT_ARROW)) {
-        paddle.move('left');
-      }else if (keyIsDown(RIGHT_ARROW)) {
-        paddle.move('right');
+function generateRandomColors(noOfColors){
+  const colors = [];
+  for(let i = 0; i < noOfColors; i++){
+    colors.push(color(random(0,255),random(0,255),random(0,255)));
+  }
+  return colors;
+}
+
+function draw(){
+    if(gameState === 'playing'){
+      background(bg);
+
+      //paddle
+      if (keyIsDown(LEFT_ARROW)) {
+          paddle.move('left');
+        }else if (keyIsDown(RIGHT_ARROW)) {
+          paddle.move('right');
+        }
+
+      
+      ball.bouncePaddle();
+      ball.bounce();
+      ball.update();
+
+      //display function calls
+      paddle.display();
+      ball.display();
+      brick.display();
+
+
+
+      for(let i = bricks.length - 1; i >= 0; i--){
+        const brick = bricks[i];
+       // brick.display();
+        if(brick.isColliding(ball)){
+          ball.reverseY();
+          bricks.splice(i,1);
+          playerScore += brick.points;
+        }else{
+          brick.display();
+        }
       }
 
-    
-    ball.bouncePaddle();
-    ball.bounce();
-    ball.update();
+      // Score Dispaly
+      textSize(32);
+      fill(255); //(0,102,153)
+      text("Score:"+playerScore, width - 200, 50);
 
+      if(ball.belowBottom()){
+        gameState = 'Loose';
+      }
 
-    //display f)unction calls
-    paddle.display();
-    ball.display();
-    brick.display();
-    bricks.forEach(brick =>{
-       
-      brick.display();
-   //   brick.collide(ball);
-      
-    });
+      if(bricks.length === 0){
+        gameState = 'Win';
+      }
 
-    // Score Dispaly
-    textSize(32);
-    fill(255); //(0,102,153)
-    text("Score:"+playerScore, width - 200, 50);
-    
+  }else{
+      textSize(150);
+      fill(255); //(0,102,153)
+      text("You "+gameState+"!!", gameWidth/2 - 350, gameHeight/2); 
+
+      if(keyIsDown(SHIFT)){
+        setup();
+      }
+  }
 }
